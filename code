@@ -1,0 +1,260 @@
+#include <iostream>
+#include <string>
+#include <cassert>
+using namespace std;
+const int maxStackSize = 10;
+template < class StackElementType >
+class Stack {
+public:
+ Stack();
+ void push(StackElementType item);
+ StackElementType pop();
+ StackElementType top();
+ bool isEmpty();
+ bool isFull();
+private:
+ StackElementType stackArray[maxStackSize];
+ int topIndex;
+};
+template < class StackElementType > Stack < StackElementType >
+::Stack()
+{
+ topIndex = -1;
+}
+template < class StackElementType > void Stack < StackElementType>
+::push(StackElementType item)
+{
+ ++topIndex;
+ assert(topIndex < maxStackSize);
+ stackArray[topIndex] = item;
+}template < class StackElementType > StackElementType Stack < StackElementType >
+::pop()
+{
+ assert(topIndex >= 0);
+ int returnIndex(topIndex);
+ --topIndex;
+ return stackArray[returnIndex];
+}
+template < class StackElementType > StackElementType Stack < StackElementType >
+::top()
+{
+ assert(topIndex >= 0);
+ return stackArray[topIndex];
+}
+template < class StackElementType > bool Stack < StackElementType>
+::isEmpty()
+{
+ return bool(topIndex == -1);
+}
+template < class StackElementType > bool Stack < StackElementType >
+::isFull()
+{
+ return topIndex == maxStackSize - 1;
+}
+const int maxQueue = 10;
+template < class queueElementType >
+class queue {
+public:
+ queue();
+ void enqueue(queueElementType e);
+ queueElementType dequeue();
+ queueElementType front();
+ bool isEmpty();
+private:
+ int f;
+ int r;
+ queueElementType elements[maxQueue];
+};
+int nextPos(int p)
+{
+ if (p == maxQueue - 1)
+ return 0;
+ else
+ return p+1;
+}
+template < class queueElementType > queue < queueElementType >::queue()
+{
+ f = 0;
+ r = 0;
+}
+template < class queueElementType > void queue < queueElementType >
+::enqueue(queueElementType e)
+{
+ assert(nextPos(r) != f);
+ r = nextPos(r);
+ elements[r] = e;
+}
+template < class queueElementType > queueElementType queue < queueElementType>
+::dequeue()
+{
+ assert(f != r);
+ f = nextPos(f);
+ return elements[f];
+}
+template < class queueElementType > queueElementType queue < queueElementType >
+::front()
+{
+ assert(f != r);
+ return elements[nextPos(f)];
+}
+template < class queueElementType > bool queue < queueElementType >
+::isEmpty()
+{
+ return bool(f == r);
+}
+//***********************************************************************************
+****************************************************
+const int TOTAL_ROOMS = 10;
+struct Room {
+ int roomNumber;
+ string roomType;
+ bool isAvailable;
+ double price;
+};
+Room hotelRooms[TOTAL_ROOMS];
+Stack<string> reservationHistory; //q
+queue<string> serviceQueue;
+// Function to initialize rooms
+void initializeRooms() {
+ for (int i = 0; i < TOTAL_ROOMS; i++) {
+ hotelRooms[i] = {i + 1, (i % 2 == 0 ? "Single" : "Double"), true, (i % 2 == 0 ? 100.0 : 200.0)};
+ }
+}
+void displayRooms() {
+ cout << "Room Number\tType\tAvailability\tPrice\n";
+ for (int i = 0; i < TOTAL_ROOMS; i++) {
+ cout << hotelRooms[i].roomNumber << "\t\t" << hotelRooms[i].roomType << "\t"
+ << (hotelRooms[i].isAvailable ? "Available" : "Booked") << "\t\t$" << hotelRooms[i].price << endl;
+ }
+}
+//***********************************************************************************
+****************************************************
+// Function to book a room
+void bookRoom() {
+ int roomNumber;
+ cout << "Enter the room number to book: ";
+ cin >> roomNumber;
+ if (roomNumber < 1 || roomNumber > TOTAL_ROOMS) {
+ cout << "Room isn't Available.\n";
+ return;
+ }
+ if (!hotelRooms[roomNumber - 1].isAvailable) {
+ cout << "Room " << roomNumber << " is already booked.\n";
+ return;
+ }
+ hotelRooms[roomNumber - 1].isAvailable = false;
+ cout << "Room " << roomNumber << " successfully booked.\n";
+}
+//***********************************************************************************
+**************************************************
+// Function to manage reservation history
+void manageReservations() {
+ int choice;
+ cout << "1. Add Reservation\n2. Cancel Last Reservation\nEnter your choice: ";
+ cin >> choice;
+ if (choice == 1) {
+ string name;
+ cout << "Enter the customer name: ";
+ cin.ignore();
+ getline(cin, name);
+ reservationHistory.push(name);
+ cout << "Reservation added for " << name << ".\n";
+ } else if (choice == 2) {
+ if (!reservationHistory.isEmpty()) {
+ cout << "Reservation canceled for " << reservationHistory.top() << ".\n";
+ reservationHistory.pop();
+ } else {
+ cout << "No reservations to cancel.\n";
+ }
+ } else {
+ cout << "this choice isn't Available.\n";
+ }
+}
+//***********************************************************************************
+****************************************************
+void manageServiceQueue() {
+ int choice;
+ cout << "1. Add Service Request\n2. Process Service Request\nEnter your choice: ";
+ cin >> choice;
+ if (choice == 1) {
+ string request;
+ cout << "Enter the service request: ";
+ cin.ignore();
+ getline(cin, request);
+ serviceQueue.enqueue(request); //Add
+ cout << "Service request added: " << request << ".\n";
+ } else if (choice == 2) {
+ if (!serviceQueue.isEmpty()) {
+ cout << "Processing service request: " << serviceQueue.front() << ".\n";
+ serviceQueue.dequeue();
+ } else {
+ cout << "No service requests in the queue.\n";
+ }
+ } else {
+ cout << "This choice isn't Available.\n";
+ }
+}
+//***********************************************************************************
+*****************************************************
+double calculateBill(double basePrice, double additionalCharges[], int n) {
+ if (n == 0) return basePrice;
+ return calculateBill(basePrice + additionalCharges[n - 1], additionalCharges, n - 1);
+}
+// Function to generate bill
+void generateBill() {
+ double basePrice = 200.0;
+ double additionalCharges[] = {20.0, 30.0, 15.0};
+ int n = sizeof(additionalCharges) / sizeof(additionalCharges[0]);
+ double total = calculateBill(basePrice, additionalCharges, n);
+ cout << "Total Bill: $" << total << endl;
+}
+//***********************************************************************************
+*******************************************************
+// Function to apply discount
+void applyDiscount() {
+ double basePrice;
+ int stayDays;
+ char loyaltyResponse;
+ cout << "Enter the base price of the room: $";
+ cin >> basePrice;
+ cout << "Enter the number of days the customer is staying: ";
+ cin >> stayDays;
+ if (stayDays <= 1) {
+ cout << "Invalid number of days.\n";
+ return;
+ }
+ cout << "Is the customer a loyal customer? (y/n): ";
+ cin >> loyaltyResponse;
+ bool isLoyalCustomer = (loyaltyResponse == 'y' || loyaltyResponse == 'Y');
+ double discount = 0.0;
+ if (stayDays > 5 && stayDays <= 10) discount += 10.0;
+ else if (stayDays > 10) discount += 15.0;
+ if (isLoyalCustomer) discount += 5.0;
+ double finalBill = basePrice * (1 - discount / 100);
+ cout << "Final bill after discount: $" << finalBill << endl;
+}
+//***********************************************************************************
+****************************************************
+// Menu-driven main function
+int main() {
+ initializeRooms();
+ while (true) {
+ cout << "\n--- Hotel Management System ---\n";
+ cout << "1. Display Rooms\n2. Book Room\n3. Manage Reservations\n";
+ cout << "4. Manage Service Queue\n5. Generate Bill\n6. Apply Discount\n7. Exit\n";
+ cout << "Enter your choice: ";
+ int choice;
+ cin >> choice;
+ switch (choice) {
+ case 1: displayRooms(); break;
+ case 2: bookRoom(); break;
+ case 3: manageReservations(); break;
+ case 4: manageServiceQueue(); break;
+ case 5: generateBill(); break;
+ case 6: applyDiscount(); break;
+ case 7: cout << "Exit Thank you!\n"; return 0;
+ default: cout << "Choice isn't Available. Please try again.\n";
+ }
+ }
+ return 0;
+}
